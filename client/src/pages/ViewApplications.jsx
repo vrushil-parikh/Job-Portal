@@ -1,5 +1,5 @@
 import React from 'react'
-import { assets, viewApplicationsPageData } from '../assets/assets'
+import { viewApplicationsPageData,assets } from '../assets/assets'
 const ViewApplications = () => {
 
   return (

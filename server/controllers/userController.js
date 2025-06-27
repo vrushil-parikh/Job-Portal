@@ -6,12 +6,12 @@ import { ApplicationStats } from 'svix'
 // Get user data
 export const getUserData = async (req,res) => {
 
-    const userId = req.auth.userId
+    const {userId} = await req.auth()
     try {
         const user = await User.findById(userId)
 
         if(!user){
-            res.json({success : false , message : 'User not found'})
+           return res.json({success : false , message : 'User not found'})
         }
         res.json({success : true, user})
     } catch (error) {
@@ -24,7 +24,7 @@ export const getUserData = async (req,res) => {
 export const applyForJob = async (req,res) => {
     const { jobId } = req.body
 
-    const userId = req.auth.userId
+    const {userId} = await req.auth()
     
     try{
         const isAlreadyApplied = await JobApplication.find({ jobId, userId})
@@ -37,7 +37,7 @@ export const applyForJob = async (req,res) => {
         }
 
         await JobApplication.create({
-            CompanyId : jobData.companyId,
+            companyId : jobData.companyId,
             userId,
             jobId,
             date : Date.now()
@@ -55,7 +55,7 @@ export const applyForJob = async (req,res) => {
 export const getUserJobApplications = async (req,res) => {
     
     try {
-        const userId = req.auth.userId
+        const {userId} =  await req.auth()
 
         const applications = await JobApplication.find({userId})
         .populate('companyId','name email image')
@@ -76,9 +76,9 @@ export const updateUserResume = async (req,res) => {
     
     try {
         
-        const userId = req.auth.userId
+        const {userId} = await req.auth()
 
-        const resumeFile = req.resumeFile
+        const resumeFile = req.file
 
         const userData = await User.findById(userId)
 

@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import Company from '../models/company.js'
 import generateToken from '../utils/generateToken.js'
 import Job from '../models/job.js'
+import JobApplication from '../models/jobApplication.js'
 // Register a new company
 export const registerCompany = async (req,res) => {
     const {name , email , password} = req.body;
@@ -56,7 +57,10 @@ export const loginCompany = async (req,res) => {
 
     try{
         const company = await Company.findOne({email})
-        if(bcrypt.compare(password,company.password)){
+        if(!company){
+            return res.json({success : false , message : "Invalid email"})
+        }
+        if( await bcrypt.compare(password,company.password)){
             res.json({
                 success : true,
                 company : {
@@ -68,7 +72,7 @@ export const loginCompany = async (req,res) => {
                 token : generateToken(company._id)
             })
         }else{
-            res.json({success : false, message : 'Invalid email or password'})
+            res.json({success : false, message : 'Invalid password'})
         }
     }
     catch(error){
@@ -126,8 +130,11 @@ export const getCompanyPostedJobs = async (req,res) => {
         const jobs = await Job.find({companyId})
 
         // (ToDo) Adding No. of applicants into in data
-
-        res.json({success : true, jobsData : jobs})
+        const jobsData = await Promise.all(jobs.map(async (job) => {
+            const applicants = await JobApplication.find({jobId : job._id})
+            return {...job.toObject(), applicants:applicants.length}
+        }))
+        res.json({success : true, jobsData})
 
     } catch (error) {
         res.json({success : false , message : error.message})
